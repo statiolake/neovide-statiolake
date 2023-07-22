@@ -1,0 +1,56 @@
+name: Package Neovide
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+  pull_request:
+  schedule:
+    - cron: "0 0 * * *"
+
+env:
+  NEOVIDE_REPO: https://github.com/neovide/neovide
+
+jobs:
+  package:
+    runs-on: windows-2019
+    permissions:
+      contents: write
+
+    steps:
+      - name: Initalize
+        id: init
+        shell: bash
+        run: |
+          echo "version=neovide-prerelease-$(date +%Y%m%d)" >> $GITHUB_OUTPUT
+          git config --global core.autocrlf input
+
+      - uses: actions/checkout@v3
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Clone Neovide
+        shell: bash
+        run: git clone ${NEOVIDE_REPO}
+
+      - name: Build Neovide
+        shell: bash
+        run: |
+          cd neovide
+          cargo build --release
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          name: ${{ steps.init.outputs.version }}
+          body: Build of prerelease version of neovide
+          tag_name: ${{ steps.init.outputs.version }}
+          draft: false
+          prerelease: false
+          files: |
+            ./neovide/target/release/neovide.exe
