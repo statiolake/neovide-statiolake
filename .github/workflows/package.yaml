@@ -6,8 +6,6 @@ on:
     branches:
       - master
   pull_request:
-  schedule:
-    - cron: "0 0 * * *"
 
 env:
   NEOVIDE_REPO: https://github.com/neovide/neovide
